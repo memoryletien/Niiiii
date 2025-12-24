@@ -14,13 +14,21 @@
       rel="stylesheet"
     />
     <style>
-      body {
+      * {
         margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
         overflow: hidden;
         background-color: #0f0505;
         font-family: "Cinzel", serif;
         user-select: none;
         -webkit-tap-highlight-color: transparent;
+        width: 100vw;
+        height: 100vh;
+        position: fixed;
       }
 
       #background-image {
@@ -30,6 +38,10 @@
         width: 100%;
         height: 100%;
         z-index: -3;
+        background: #0f0505;
+      }
+
+      .bg-loaded {
         background-image: url("./back.png");
         background-size: cover;
         background-position: center;
@@ -65,40 +77,13 @@
         transition: opacity 1.5s ease;
       }
 
-      #frost-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
+      #canvas-container {
         width: 100%;
         height: 100%;
-        z-index: 1;
-        pointer-events: none;
-        box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.7);
-        background: radial-gradient(
-          circle,
-          transparent 60%,
-          rgba(20, 0, 5, 0.3) 100%
-        );
-      }
-
-      #canvas-container {
-        width: 100vw;
-        height: 100vh;
         position: absolute;
         top: 0;
         left: 0;
         z-index: 2;
-      }
-
-      #firework-canvas {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 6;
-        pointer-events: none;
-        display: none;
       }
 
       #ui-layer {
@@ -113,7 +98,6 @@
         flex-direction: column;
         align-items: center;
         padding-top: 10vh;
-        transition: opacity 0.5s;
       }
 
       #main-title {
@@ -148,89 +132,19 @@
         padding-bottom: 5px;
       }
 
-      #secret-message {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        font-family: "Cinzel", serif;
-        font-weight: 700;
-        font-size: 8vw;
-        width: 90%;
-        white-space: normal;
-        line-height: 1.3;
-        text-transform: uppercase;
-        letter-spacing: 4px;
-        text-align: center;
-        z-index: 100;
-        opacity: 0;
-        pointer-events: none;
-        background: linear-gradient(
-          to bottom,
-          #fff8db 0%,
-          #ffd700 40%,
-          #daa520 100%
-        );
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        transition: opacity 1.5s ease;
-      }
-
-      #lyrics-container {
-        position: absolute;
-        bottom: 20%;
-        width: 100%;
-        text-align: center;
-        z-index: 20;
-        pointer-events: none;
-      }
-      #lyrics-text {
-        font-family: "Pinyon Script", cursive;
-        font-size: 6vw;
-        color: #fff0f5;
-        text-shadow: 0 0 5px rgba(255, 200, 200, 0.5);
-        padding: 0 20px;
-        transition: all 0.3s ease;
-      }
-
-      #webcam-wrapper {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        width: 100px;
-        height: 75px;
-        z-index: 50;
-        background: #000;
-        border: 1px solid #ffd700;
-        border-radius: 4px;
-        box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
-        overflow: hidden;
-        opacity: 0.6;
-      }
-      #webcam-canvas {
-        width: 100%;
-        height: 100%;
-        transform: scaleX(-1);
-        border-radius: 2px;
-      }
-      #cam-stats {
-        display: none;
-      }
-
       #start-overlay {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(15, 5, 5, 0.9);
+        background: rgba(15, 5, 5, 0.95);
         z-index: 100;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: opacity 0.8s;
       }
       .start-btn {
         border: 1px solid #eebb66;
@@ -243,7 +157,6 @@
         background: rgba(0, 0, 0, 0.6);
         margin-bottom: 15px;
         box-shadow: 0 0 20px rgba(238, 187, 102, 0.2);
-        transition: all 0.3s;
       }
       .start-note {
         color: #886666;
@@ -251,16 +164,25 @@
         font-style: italic;
       }
 
-      #touch-hint {
+      #webcam-wrapper {
         position: absolute;
-        bottom: 100px;
+        bottom: 15px;
+        left: 15px;
+        width: 80px;
+        height: 60px;
+        z-index: 50;
+        background: #000;
+        border: 1px solid #ffd700;
+        border-radius: 4px;
+        box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        overflow: hidden;
+        opacity: 0.6;
+        display: none;
+      }
+      #webcam-canvas {
         width: 100%;
-        text-align: center;
-        font-size: 10px;
-        color: rgba(255, 215, 0, 0.5);
-        pointer-events: none;
-        text-transform: uppercase;
-        letter-spacing: 2px;
+        height: 100%;
+        transform: scaleX(-1);
       }
 
       @keyframes floatTitle {
@@ -280,917 +202,535 @@
         #mode-indicator {
           font-size: 9px;
         }
-        #secret-message {
-          font-size: 5vw;
-          width: 80%;
-        }
-        #lyrics-text {
-          font-size: 32px;
-        }
         #webcam-wrapper {
-          width: 150px;
-          height: 112px;
-          opacity: 1;
-        }
-        #cam-stats {
-          display: block;
-          position: absolute;
-          bottom: 0;
-          left: 0;
-          width: 100%;
-          text-align: center;
-          font-family: "Cinzel", serif;
-          font-size: 6px;
-          font-weight: 700;
-          color: #ffd700;
-          letter-spacing: 2px;
-          text-transform: uppercase;
-          z-index: 26;
-          background: rgba(0, 0, 0, 0.8);
-          padding: 4px 0;
-          border-top: 1px solid #ffd700;
+          width: 120px;
+          height: 90px;
         }
       }
     </style>
-    <!-- Tối ưu: Chỉ load các script thật sự cần thiết -->
+    <!-- Chỉ load Three.js cơ bản -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
   </head>
   <body>
     <div id="background-image"></div>
     <div id="black-void"></div>
     <div id="bg-gradient"></div>
-    <div id="frost-overlay"></div>
 
     <div id="canvas-container"></div>
-    <canvas id="firework-canvas"></canvas>
-
-    <div id="secret-message">MERRY CHRISTMAS NI CHỦ TỌA</div>
 
     <div id="ui-layer">
       <h1 id="main-title">Ni là số 1</h1>
       <div id="mode-indicator">SAO MÀ XINH QUÁ VẬY TRỜI</div>
-      <div id="touch-hint">SWIPE TO ROTATE &bull; TAP TO SWITCH</div>
     </div>
     <div id="start-overlay">
       <div class="start-btn">NHẤN NÈ NI</div>
-      <div class="start-note">♫ Last Christmas</div>
+      <div class="start-note">♫ Thiên thượng thiên hạ</div>
     </div>
-    <div id="lyrics-container"><span id="lyrics-text">...</span></div>
 
     <div id="webcam-wrapper">
-      <div id="cam-stats">SCAN</div>
       <canvas id="webcam-canvas"></canvas>
     </div>
 
-    <video
-      id="input_video"
-      style="display: none; transform: scaleX(-1)"
-      playsinline
-    ></video>
-    <audio id="bg-music" src="./audio.mp3" loop preload="metadata"></audio>
+    <audio id="bg-music" src="./audio.mp3" loop preload="none"></audio>
 
     <script>
-      // ========== TỐI ƯU HÓA CẤU HÌNH ==========
-      const isMobile =
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        ) || window.innerWidth < 800;
-
-      // Giảm số lượng particle và texture để tăng performance
-      const TOTAL_PHOTOS = isMobile ? 6 : 12; // Giảm từ 8/20 xuống 6/12
-      const PARTICLE_RATIO = isMobile ? 0.2 : 0.6; // Giảm particle
-
-      const AI_SKIP_FRAMES = isMobile ? 10 : 4; // Tăng skip frames để giảm xử lý
-
-      const LYRICS_DATA = [
-        { time: 0.0, text: "Thiên thượng thiên hạ" },
-        { time: 4.0, text: "Vô nhân khả tỉ" },
-        { time: 7.13, text: "Thiên thượng thiên hạ" },
-        { time: 11.08, text: "Vô nhân khả tỉ" },
-        { time: 15.08, text: "Thiên thượng thiên hạ" },
-        { time: 18.99, text: "Vô nhân khả tỉ" },
-      ];
-
-      const zFactor = isMobile ? 1.4 : 1.0;
-      const SCENE_CONFIG = {
-        scaleFar: isMobile ? 6.0 : 8.0, // Giảm scale
-        posFar: { x: 0.0, y: isMobile ? -0.2 : -0.6 },
-        camZFar: 7.7 * zFactor,
-        scaleNear: 8.0, // Giảm scale
-        posNear: { x: 0.0, y: -0.7 },
-        camZNear: 2.5,
-        zoomSpeed: 0.1,
-        rotateSpeed: 0.08,
+      // ========== CẤU HÌNH TỐI ƯU CAO ==========
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      
+      // CẤU HÌNH ĐƠN GIẢN - TỐI ƯU TỐC ĐỘ
+      const CONFIG = {
+        // Giảm tối đa cho mobile
+        totalPhotos: isMobile ? 4 : 8,
+        particles: isMobile ? 300 : 800,
+        showCamera: false, // TẮT CAMERA để tăng performance
+        enableMusic: true,
+        enableHandTracking: false, // TẮT HAND TRACKING
       };
 
-      // Giảm số lượng particle trong các layer
-      const LAYERS = [
-        {
-          id: "inner_snow",
-          shape: "Snowflake",
-          count: Math.floor(800 * PARTICLE_RATIO), // Giảm từ 1200
-          opacity: 0.9,
-          color: "#ffffff",
-          speed: 0.0005,
-          size: 0.06,
-          radius: 0.48,
-          startY: 1.1,
-          endY: -0.3,
-          drift: 0.01,
-          twinkle: false,
-          rotateWithJar: true,
-        },
-        {
-          id: "snow_main",
-          shape: "Snowflake",
-          count: Math.floor(300 * PARTICLE_RATIO), // Giảm từ 500
-          opacity: 0.9,
-          color: "#e0ffff",
-          speed: 0.001,
-          size: 0.18,
-          radius: 5.0,
-          startY: 7.0,
-          endY: -6.0,
-          drift: 0.05,
-          twinkle: true,
-          rotateWithJar: true,
-        },
-        {
-          id: "gold_dust",
-          shape: "Circle",
-          count: Math.floor(300 * PARTICLE_RATIO), // Giảm từ 500
-          opacity: 0.8,
-          color: "#ffcc00",
-          speed: 0.0006,
-          size: 0.03,
-          radius: 4.5,
-          startY: 6.0,
-          endY: -4.0,
-          drift: 0.08,
-          twinkle: true,
-          rotateWithJar: true,
-        },
-      ];
+      // ========== KHỞI TẠO NHANH ==========
+      let scene, camera, renderer, jarModel;
+      let clock = new THREE.Clock();
+      let isInitialized = false;
+      let isRotating = true;
+      let rotationSpeed = 0.005;
 
-      let scene,
-        camera,
-        renderer,
-        carModel,
-        mixer,
-        particleSystems = {},
-        textureCache = {},
-        polaroidTextures = [],
-        polaroidGroup,
-        clock = new THREE.Clock(),
-        bgParticleGroup;
-      let isGalleryMode = false,
-        lastGesture = "NONE",
-        isZoomedIn = false,
-        lastSwitchTime = 0,
-        lastDropTime = 0,
-        jarOffsetY = 0,
-        inspectedPhoto = null;
-      const SWITCH_COOLDOWN = 1.0;
-
-      const STATE = {
-        hand: { detected: false, x: 0.5, y: 0.5, gesture: "NONE" },
-        targetRotation: { x: 0, y: 0 },
-        currentRotation: { x: 0, y: 0 },
-      };
-
-      let isFireworkMode = false;
-
-      let touchStartX = 0,
-        touchStartY = 0;
-      let isTouching = false;
-      let touchLastTap = 0;
-
-      const FW_CONFIG = {
-        particleCount: isMobile ? 30 : 200, // Giảm particle firework
-        explosionRadius: 20,
-        friction: 0.98,
-        gravity: 0.04,
-        focalLength: 800,
-        autoFireRate: isMobile ? 150 : 120, // Giảm firework rate
-      };
-      let fwCanvas, fwCtx, fwWidth, fwHeight, fwCx, fwCy;
-      let fwParticles = [];
-      let fwFireworks = [];
-
-      // ========== HÀM KHỞI TẠO TỐI ƯU ==========
-      function initFireworkCanvas() {
-        fwCanvas = document.getElementById("firework-canvas");
-        fwCtx = fwCanvas.getContext("2d");
-        resizeFw();
-        window.addEventListener("resize", resizeFw);
-      }
-
-      function resizeFw() {
-        fwWidth = window.innerWidth;
-        fwHeight = window.innerHeight;
-        fwCanvas.width = fwWidth;
-        fwCanvas.height = fwHeight;
-        fwCx = fwWidth / 2;
-        fwCy = fwHeight / 2;
-      }
-
-      // ========== LOADER ĐƠN GIẢN ==========
-      let assetsLoaded = 0;
-      const totalAssets = 2; // chỉ đếm các assets chính
-
-      function checkAssetsLoaded() {
-        assetsLoaded++;
-        if (assetsLoaded >= totalAssets) {
-          document.getElementById("start-overlay").style.display = "flex";
-        }
-      }
-
-      // ========== KHỞI TẠO CHÍNH ==========
-      function init() {
-        const overlay = document.getElementById("start-overlay");
-        const audio = document.getElementById("bg-music");
-
-        overlay.addEventListener("click", () => {
-          overlay.style.opacity = 0;
-          setTimeout(() => overlay.remove(), 500);
-          initTouchControls();
-          audio.play().catch((e) => {
-            console.log("Audio Error:", e);
-          });
+      // Tải background image trước
+      function preloadBackground() {
+        return new Promise((resolve) => {
+          if (!CONFIG.enableMusic) {
+            resolve();
+            return;
+          }
+          
+          const bg = document.getElementById('background-image');
+          const img = new Image();
+          img.onload = function() {
+            bg.classList.add('bg-loaded');
+            resolve();
+          };
+          img.onerror = resolve;
+          img.src = './back.png';
         });
+      }
 
+      // Khởi tạo cực nhanh
+      async function initQuick() {
+        const overlay = document.getElementById("start-overlay");
+        
+        // Tải background song song
+        preloadBackground();
+        
+        overlay.addEventListener("click", () => {
+          overlay.style.opacity = '0';
+          setTimeout(() => {
+            overlay.style.display = 'none';
+            init3DScene();
+            if (CONFIG.enableMusic) {
+              const audio = document.getElementById("bg-music");
+              audio.play().catch(e => console.log("Audio optional"));
+            }
+          }, 300);
+        }, { once: true });
+      }
+
+      // ========== SCENE 3D ĐƠN GIẢN ==========
+      function init3DScene() {
+        if (isInitialized) return;
+        isInitialized = true;
+        
         const container = document.getElementById("canvas-container");
+        
+        // Scene đơn giản
         scene = new THREE.Scene();
+        scene.background = null;
+        
+        // Camera đơn giản
         camera = new THREE.PerspectiveCamera(
-          45,
-          window.innerWidth / window.innerHeight,
+          50,
+          container.clientWidth / container.clientHeight,
           0.1,
           1000
         );
-        camera.position.set(0, 0, SCENE_CONFIG.camZFar);
-
-        // Cấu hình renderer tối ưu
+        camera.position.z = 15;
+        
+        // Renderer tối ưu
         renderer = new THREE.WebGLRenderer({
           antialias: false,
           alpha: true,
           powerPreference: "high-performance",
           preserveDrawingBuffer: false,
+          depth: true,
+          stencil: false
         });
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.setPixelRatio(isMobile ? 1.0 : 1.5); // Giảm pixel ratio trên mobile
-        renderer.toneMapping = THREE.NoToneMapping;
-        renderer.toneMappingExposure = 1.0;
-        renderer.outputColorSpace = THREE.SRGBColorSpace;
-
+        
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        renderer.setPixelRatio(1); // LUÔN để 1 cho performance
+        renderer.outputEncoding = THREE.sRGBEncoding;
+        
         container.appendChild(renderer.domElement);
-
-        // TẢI ASSETS BẤT ĐỒNG BỘ
-        Promise.all([
-          loadEssentialAssets(),
-          new Promise((resolve) => {
-            // Tải model sau cùng
-            const loader = new THREE.GLTFLoader();
-            loader.load(
-              "./car.glb",
-              (gltf) => {
-                carModel = gltf.scene;
-                carModel.scale.setScalar(SCENE_CONFIG.scaleFar);
-                carModel.position.set(
-                  SCENE_CONFIG.posFar.x,
-                  SCENE_CONFIG.posFar.y,
-                  0
-                );
-                carModel.position.z = -0.5;
-                carModel.rotation.set(0, 0, 0);
-                if (gltf.animations.length) {
-                  mixer = new THREE.AnimationMixer(carModel);
-                  mixer.clipAction(gltf.animations[0]).play();
-                }
-                scene.add(carModel);
-                resolve();
-              },
-              undefined,
-              (error) => {
-                console.error("Error loading model:", error);
-                resolve(); // Vẫn tiếp tục dù có lỗi
-              }
-            );
-          }),
-        ]).then(() => {
-          setupSceneLighting();
-          setupBackgroundParticles();
-          LAYERS.forEach(createLayerSystem);
-          createPolaroids();
-          initFireworkCanvas();
-          initHandTracking();
-          animate();
-        });
-
-        window.addEventListener(
-          "resize",
-          () => {
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            resizeFw();
-          },
-          { passive: true }
-        );
-      }
-
-      // ========== TẢI ASSETS THIẾT YẾU ==========
-      async function loadEssentialAssets() {
-        await Promise.all([loadTextures(), loadPolaroidTextures()]);
-      }
-
-      function setupSceneLighting() {
-        scene.environment = null;
-        scene.background = null;
-
-        // Ánh sáng tối ưu
-        const dirLight = new THREE.DirectionalLight(0xffffff, 1.0);
-        dirLight.position.set(5, 10, 7);
-        scene.add(dirLight);
-
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        
+        // Ánh sáng đơn giản
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
         scene.add(ambientLight);
-      }
-
-      function initTouchControls() {
-        const el = document.getElementById("canvas-container");
-
-        el.addEventListener(
-          "touchstart",
-          (e) => {
-            if (e.touches.length === 1) {
-              touchStartX = e.touches[0].clientX;
-              touchStartY = e.touches[0].clientY;
-              isTouching = true;
-            }
-          },
-          { passive: true }
-        );
-
-        el.addEventListener(
-          "touchmove",
-          (e) => {
-            if (!isTouching || isFireworkMode) return;
-            if (e.touches.length === 1) {
-              const x = e.touches[0].clientX;
-              const y = e.touches[0].clientY;
-              const dx = (x - touchStartX) * 0.005;
-              const dy = (y - touchStartY) * 0.005;
-
-              if (!isGalleryMode) {
-                STATE.targetRotation.x += dy;
-                STATE.targetRotation.y += dx;
-                STATE.currentRotation.x = STATE.targetRotation.x;
-                STATE.currentRotation.y = STATE.targetRotation.y;
-                if (carModel) {
-                  carModel.rotation.y = STATE.currentRotation.y;
-                  carModel.rotation.x = STATE.currentRotation.x;
-                }
-              }
-              touchStartX = x;
-              touchStartY = y;
-            }
-          },
-          { passive: true }
-        );
-
-        el.addEventListener("touchend", (e) => {
-          isTouching = false;
-          const now = Date.now();
-          if (now - touchLastTap < 300) toggleMode();
-          touchLastTap = now;
-        });
-      }
-
-      // ========== TẢI TEXTURE TỐI ƯU ==========
-      function loadPolaroidTextures() {
-        return new Promise((resolve) => {
-          let loaded = 0;
-          const total = TOTAL_PHOTOS;
-
-          for (let i = 1; i <= total; i++) {
-            const canvas = document.createElement("canvas");
-            canvas.width = isMobile ? 200 : 300; // Giảm kích thước canvas
-            canvas.height = isMobile ? 250 : 375;
-            const ctx = canvas.getContext("2d");
-
-            const texture = new THREE.CanvasTexture(canvas);
-            texture.colorSpace = THREE.SRGBColorSpace;
-            polaroidTextures.push(texture);
-
-            // Tạo placeholder trước
-            ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "rgba(0, 0, 0, 0.1)";
-            ctx.font = "italic 16px Pinyon Script";
-            ctx.textAlign = "center";
-            ctx.fillText(
-              `Loading ${i}`,
-              canvas.width / 2,
-              canvas.height / 2
-            );
-
-            // Tải ảnh trong background
-            setTimeout(() => {
-              const img = new Image();
-              img.crossOrigin = "anonymous";
-              img.onload = function () {
-                const border = 8;
-                const containerWidth = canvas.width - border * 2;
-                const containerHeight = canvas.height - 60 - border;
-                const imgRatio = img.width / img.height;
-                const containerRatio = containerWidth / containerHeight;
-
-                let drawWidth, drawHeight, drawX, drawY;
-
-                if (imgRatio > containerRatio) {
-                  drawWidth = containerWidth;
-                  drawHeight = containerWidth / imgRatio;
-                  drawX = border;
-                  drawY = border + (containerHeight - drawHeight) / 2;
-                } else {
-                  drawHeight = containerHeight;
-                  drawWidth = containerHeight * imgRatio;
-                  drawX = border + (containerWidth - drawWidth) / 2;
-                  drawY = border;
-                }
-
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = "rgba(255, 255, 255, 0.05)";
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
-
-                ctx.fillStyle = "rgba(0, 0, 0, 0.5)";
-                ctx.font = "italic 18px Pinyon Script";
-                ctx.fillText(
-                  `Moment ${i}`,
-                  canvas.width / 2,
-                  canvas.height - 20
-                );
-
-                texture.needsUpdate = true;
-                loaded++;
-                if (loaded === total) resolve();
-              };
-              img.onerror = () => {
-                loaded++;
-                if (loaded === total) resolve();
-              };
-              img.src = `./images/${i}.png?v=${Date.now()}`;
-            }, i * 100); // Stagger loading
-          }
-        });
-      }
-
-      function loadTextures() {
-        return new Promise((resolve) => {
-          const textureLoader = new THREE.TextureLoader();
-          
-          // Tạo simple snowflake texture
-          const cvs = document.createElement("canvas");
-          cvs.width = 32; // Giảm kích thước
-          cvs.height = 32;
-          const ctx = cvs.getContext("2d");
-          ctx.fillStyle = "rgba(255, 255, 255, 0.8)";
-          ctx.beginPath();
-          for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i;
-            ctx.lineTo(
-              16 + Math.cos(angle) * 12,
-              16 + Math.sin(angle) * 12
-            );
-          }
-          ctx.closePath();
-          ctx.fill();
-          
-          textureCache["Snowflake"] = new THREE.CanvasTexture(cvs);
-          
-          // Simple circle texture
-          const circleCvs = document.createElement("canvas");
-          circleCvs.width = 32;
-          circleCvs.height = 32;
-          const circleCtx = circleCvs.getContext("2d");
-          const g = circleCtx.createRadialGradient(16, 16, 0, 16, 16, 15);
-          g.addColorStop(0, "rgba(255,255,255,1)");
-          g.addColorStop(0.7, "rgba(255,255,255,0.5)");
-          g.addColorStop(1, "rgba(255,255,255,0)");
-          circleCtx.fillStyle = g;
-          circleCtx.fillRect(0, 0, 32, 32);
-          textureCache["Circle"] = new THREE.CanvasTexture(circleCvs);
-          
-          resolve();
-        });
-      }
-
-      function setupBackgroundParticles() {
-        const count = isMobile ? 100 : 800; // Giảm background particles
-        bgParticleGroup = new THREE.Group();
-        bgParticleGroup.position.z = -12;
-        scene.add(bgParticleGroup);
         
-        const starGeo = new THREE.BufferGeometry();
-        const starPos = new Float32Array(count * 3);
-        for (let i = 0; i < count; i++) {
-          starPos[i * 3] = (Math.random() - 0.5) * 120;
-          starPos[i * 3 + 1] = (Math.random() - 0.5) * 80;
-          starPos[i * 3 + 2] = (Math.random() - 0.5) * 40;
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        directionalLight.position.set(5, 10, 7);
+        scene.add(directionalLight);
+        
+        // Tạo jar đơn giản (hình học cơ bản)
+        createSimpleJar();
+        
+        // Tạo particles đơn giản
+        createSimpleParticles();
+        
+        // Tạo photos đơn giản
+        createSimplePhotos();
+        
+        // Bắt đầu animation
+        animate();
+        
+        // Xử lý resize
+        window.addEventListener('resize', onWindowResize, { passive: true });
+        
+        // Bật xoay tự động
+        setTimeout(() => {
+          isRotating = true;
+        }, 1000);
+      }
+
+      function createSimpleJar() {
+        // Tạo jar từ hình học cơ bản (không cần load GLTF)
+        const group = new THREE.Group();
+        
+        // Thân jar (hình trụ)
+        const cylinderGeometry = new THREE.CylinderGeometry(3, 2.5, 6, 16, 1);
+        const cylinderMaterial = new THREE.MeshLambertMaterial({ 
+          color: 0x8B4513,
+          transparent: true,
+          opacity: 0.7
+        });
+        const cylinder = new THREE.Mesh(cylinderGeometry, cylinderMaterial);
+        cylinder.position.y = 0;
+        group.add(cylinder);
+        
+        // Nắp jar
+        const lidGeometry = new THREE.CylinderGeometry(2.6, 2.6, 0.5, 16);
+        const lidMaterial = new THREE.MeshLambertMaterial({ color: 0xA0522D });
+        const lid = new THREE.Mesh(lidGeometry, lidMaterial);
+        lid.position.y = 3.2;
+        group.add(lid);
+        
+        // Snow bên trong
+        const snowGeometry = new THREE.SphereGeometry(2, 16, 16);
+        const snowMaterial = new THREE.MeshLambertMaterial({ 
+          color: 0xFFFFFF,
+          transparent: true,
+          opacity: 0.3
+        });
+        const snow = new THREE.Mesh(snowGeometry, snowMaterial);
+        snow.position.y = -1;
+        group.add(snow);
+        
+        scene.add(group);
+        jarModel = group;
+      }
+
+      function createSimpleParticles() {
+        const particleCount = CONFIG.particles;
+        const geometry = new THREE.BufferGeometry();
+        const positions = new Float32Array(particleCount * 3);
+        const colors = new Float32Array(particleCount * 3);
+        
+        for (let i = 0; i < particleCount; i++) {
+          const i3 = i * 3;
+          
+          // Vị trí ngẫu nhiên trong jar
+          const radius = 2 * Math.sqrt(Math.random());
+          const theta = Math.random() * Math.PI * 2;
+          const y = (Math.random() - 0.5) * 4;
+          
+          positions[i3] = radius * Math.cos(theta);
+          positions[i3 + 1] = y;
+          positions[i3 + 2] = radius * Math.sin(theta);
+          
+          // Màu sắc (vàng hoặc trắng)
+          const isGold = Math.random() > 0.7;
+          colors[i3] = isGold ? 1.0 : 0.9;     // R
+          colors[i3 + 1] = isGold ? 0.8 : 0.95; // G
+          colors[i3 + 2] = isGold ? 0.0 : 1.0;  // B
         }
-        starGeo.setAttribute("position", new THREE.BufferAttribute(starPos, 3));
         
-        bgParticleGroup.add(
-          new THREE.Points(
-            starGeo,
-            new THREE.PointsMaterial({
-              color: 0xffeebb,
-              size: 0.1,
-              transparent: true,
-              opacity: 0.6,
-            })
-          )
-        );
+        geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+        
+        const material = new THREE.PointsMaterial({
+          size: 0.1,
+          vertexColors: true,
+          transparent: true,
+          opacity: 0.8,
+          sizeAttenuation: true
+        });
+        
+        const particles = new THREE.Points(geometry, material);
+        particles.position.y = -1;
+        scene.add(particles);
+        
+        // Lưu reference để animation
+        scene.userData.particles = particles;
+        scene.userData.particlePositions = positions;
       }
 
-      function createPolaroids() {
-        polaroidGroup = new THREE.Group();
-        const geometry = new THREE.PlaneGeometry(0.7, 0.9); // Giảm kích thước
-
-        const count = TOTAL_PHOTOS;
-        const cols = 4; // Giảm số cột
-        const radiusBase = 3.5; // Giảm radius
-
-        for (let i = 0; i < count; i++) {
+      function createSimplePhotos() {
+        const photoGroup = new THREE.Group();
+        const photoCount = CONFIG.totalPhotos;
+        const radius = 8;
+        
+        for (let i = 0; i < photoCount; i++) {
+          // Tạo plane đơn giản
+          const geometry = new THREE.PlaneGeometry(2, 2.5);
           const material = new THREE.MeshBasicMaterial({
-            map: polaroidTextures[i],
+            color: 0xFFFFFF,
             side: THREE.DoubleSide,
             transparent: true,
-            opacity: 0,
+            opacity: 0
           });
-          const polaroid = new THREE.Mesh(geometry, material);
           
-          const row = Math.floor(i / cols);
-          const col = i % cols;
-          const yBase = -1.0 + row * 1.0; // Giảm khoảng cách
-          const angleStep = (Math.PI * 1.6) / cols; // Giảm góc
-          const angleOffset = row % 2 === 0 ? 0 : angleStep / 2;
-          const theta = -2.0 + col * angleStep + angleOffset;
+          const photo = new THREE.Mesh(geometry, material);
           
-          const x = radiusBase * Math.cos(theta);
-          const z = radiusBase * Math.sin(theta);
+          // Tính vị trí vòng tròn
+          const angle = (i / photoCount) * Math.PI * 2;
+          const x = Math.cos(angle) * radius;
+          const z = Math.sin(angle) * radius;
+          const y = Math.sin(angle * 2) * 1.5;
           
-          polaroid.userData = {
-            targetPos: new THREE.Vector3(x, yBase, z),
-            startPos: new THREE.Vector3(x * 3, yBase * 3, z * 3),
-            floatOffset: Math.random() * 100,
-            targetRot: { 
-              y: Math.atan2(x, z) + Math.PI, 
-              z: (Math.random() - 0.5) * 0.1 
-            },
-          };
+          photo.position.set(x, y, z);
+          photo.lookAt(0, 0, 0);
           
-          polaroid.position.copy(polaroid.userData.startPos);
-          polaroid.visible = false;
-          polaroidGroup.add(polaroid);
+          // Tải ảnh bất đồng bộ
+          loadPhotoTexture(i + 1, material);
+          
+          photoGroup.add(photo);
         }
-        scene.add(polaroidGroup);
+        
+        scene.add(photoGroup);
+        scene.userData.photoGroup = photoGroup;
+        scene.userData.photos = photoGroup.children;
       }
 
-      function createLayerSystem(config) {
-        const geo = new THREE.BufferGeometry();
-        const pos = new Float32Array(config.count * 3);
-        const vel = new Float32Array(config.count);
-        
-        for (let i = 0; i < config.count; i++) {
-          const r = config.radius * Math.sqrt(Math.random());
-          const theta = Math.random() * 2 * Math.PI;
-          const idx = i * 3;
+      async function loadPhotoTexture(index, material) {
+        try {
+          const img = new Image();
+          img.crossOrigin = "anonymous";
           
-          pos[idx] = r * Math.cos(theta);
-          pos[idx + 1] = config.startY - Math.random() * (config.startY - config.endY);
-          pos[idx + 2] = r * Math.sin(theta);
-          
-          vel[i] = Math.random() * 0.4 + 0.6;
-        }
-        
-        geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
-        geo.setAttribute("velocity", new THREE.BufferAttribute(vel, 1));
-        
-        const mat = new THREE.PointsMaterial({
-          size: config.size,
-          color: new THREE.Color(config.color),
-          map: textureCache[config.shape],
-          transparent: true,
-          opacity: config.opacity,
-          blending: THREE.AdditiveBlending,
-          depthWrite: false,
-          sizeAttenuation: true,
-        });
-        
-        const sys = new THREE.Points(geo, mat);
-        sys.userData = { config: config };
-        particleSystems[config.id] = sys;
-        scene.add(sys);
-      }
-
-      // ========== HÀM CHÍNH TỐI ƯU ==========
-      function toggleMode() {
-        if (isFireworkMode) return;
-        const now = clock.getElapsedTime();
-        if (now - lastSwitchTime < SWITCH_COOLDOWN) return;
-        lastSwitchTime = now;
-        isGalleryMode = !isGalleryMode;
-
-        if (!isGalleryMode) {
-          document.getElementById("mode-indicator").innerText =
-            "SAO MÀ XINH QUÁ VẬY TRỜI";
-        }
-
-        if (isGalleryMode) {
-          gsap.to(window, {
-            duration: 1.0,
-            jarOffsetY: -6,
-            ease: "power2.inOut",
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+            img.src = `./images/${index}.png?t=${Date.now()}`;
           });
           
-          polaroidGroup.rotation.set(0, 0, 0);
-          polaroidGroup.children.forEach((polaroid, index) => {
-            polaroid.visible = true;
-            polaroid.material.opacity = 0;
-            const t = polaroid.userData.targetPos;
-            const r = polaroid.userData.targetRot;
-            
-            gsap.to(polaroid.position, {
-              x: t.x,
-              y: t.y,
-              z: t.z,
-              duration: 0.8,
-              ease: "power2.out",
-              delay: index * 0.02,
-            });
-            
-            gsap.to(polaroid.rotation, {
-              x: 0,
-              y: r.y,
-              z: r.z,
-              duration: 0.8,
-              ease: "power2.out",
-              delay: index * 0.02,
-            });
-            
-            gsap.to(polaroid.material, {
-              opacity: 1,
-              duration: 0.6,
-              delay: index * 0.02,
-            });
-          });
-        } else {
-          gsap.to(window, {
-            duration: 1.0,
-            jarOffsetY: 0,
-            ease: "back.out(0.8)",
-          });
+          // Tạo texture từ ảnh
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          const size = isMobile ? 100 : 150;
+          canvas.width = size;
+          canvas.height = size * 1.25;
           
-          polaroidGroup.children.forEach((polaroid, index) => {
-            const s = polaroid.userData.startPos;
-            gsap.to(polaroid.position, {
-              x: s.x,
-              y: s.y,
-              z: s.z,
-              duration: 0.6,
-              ease: "power2.in",
-              delay: index * 0.01,
-            });
-            
-            gsap.to(polaroid.material, {
-              opacity: 0,
-              duration: 0.5,
-              delay: index * 0.01,
-            });
-          });
+          // Vẽ ảnh với tỉ lệ đúng
+          const imgRatio = img.width / img.height;
+          const canvasRatio = canvas.width / canvas.height;
+          
+          let drawWidth, drawHeight, drawX, drawY;
+          
+          if (imgRatio > canvasRatio) {
+            drawWidth = canvas.width;
+            drawHeight = canvas.width / imgRatio;
+            drawX = 0;
+            drawY = (canvas.height - drawHeight) / 2;
+          } else {
+            drawHeight = canvas.height;
+            drawWidth = canvas.height * imgRatio;
+            drawX = (canvas.width - drawWidth) / 2;
+            drawY = 0;
+          }
+          
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          ctx.drawImage(img, drawX, drawY, drawWidth, drawHeight);
+          
+          // Tạo texture
+          const texture = new THREE.CanvasTexture(canvas);
+          texture.minFilter = THREE.LinearFilter;
+          texture.magFilter = THREE.LinearFilter;
+          
+          material.map = texture;
+          material.needsUpdate = true;
+          
+        } catch (error) {
+          console.log(`Could not load photo ${index}`);
+          // Sử dụng màu mặc định
+          material.color.setHex(0xF0F0F0);
         }
       }
 
-      // ========== ANIMATE LOOP TỐI ƯU ==========
+      // ========== ANIMATION LOOP TỐI ƯU ==========
       let lastTime = 0;
-      const FPS = 60;
-      const interval = 1000 / FPS;
+      let frameCount = 0;
+      const targetFPS = 60;
+      const frameTime = 1000 / targetFPS;
 
       function animate(currentTime = 0) {
         requestAnimationFrame(animate);
         
         // Giới hạn FPS
         const deltaTime = currentTime - lastTime;
-        if (deltaTime < interval) return;
-        lastTime = currentTime - (deltaTime % interval);
-
-        const dt = clock.getDelta();
-        const time = clock.getElapsedTime();
-
-        if (mixer) mixer.update(dt);
-        updateLyrics();
-        updateParticles(time);
-        updatePolaroids(time);
-        updateBackgroundParticles(time, dt);
-
-        // Xử lý gesture
-        const currentGesture = STATE.hand.gesture;
-        if (currentGesture === "VICTORY" && lastGesture !== "VICTORY") {
-          toggleMode();
+        if (deltaTime < frameTime) return;
+        lastTime = currentTime - (deltaTime % frameTime);
+        frameCount++;
+        
+        const elapsedTime = clock.getElapsedTime();
+        
+        // Xoay jar nếu đang bật
+        if (jarModel && isRotating) {
+          jarModel.rotation.y += rotationSpeed;
         }
         
-        lastGesture = currentGesture;
-
-        // Xoay model
-        if (!isTouching && STATE.hand.detected && carModel && !isGalleryMode && inspectedPhoto === null) {
-          const targetY = (STATE.hand.x - 0.5) * (Math.PI * 4.0);
-          const targetX = (STATE.hand.y - 0.5) * (Math.PI * 0.8);
-
-          STATE.currentRotation.x += (targetX - STATE.currentRotation.x) * 0.08;
-          STATE.currentRotation.y += (targetY - STATE.currentRotation.y) * 0.08;
-
-          carModel.rotation.y = STATE.currentRotation.y;
-          carModel.rotation.x = STATE.currentRotation.x;
-        } else if (carModel && !isGalleryMode && inspectedPhoto === null) {
-          carModel.rotation.y += 0.3 * dt;
-          carModel.rotation.x *= 0.97;
-          STATE.currentRotation.y = carModel.rotation.y;
-          STATE.currentRotation.x = carModel.rotation.x;
-        }
-
-        // Camera zoom
-        if (!isGalleryMode) {
-          const targetZ = isZoomedIn ? SCENE_CONFIG.camZNear : SCENE_CONFIG.camZFar;
-          camera.position.z += (targetZ - camera.position.z) * SCENE_CONFIG.zoomSpeed;
-          
-          if (carModel) {
-            const targetScale = isZoomedIn ? SCENE_CONFIG.scaleNear : SCENE_CONFIG.scaleFar;
-            carModel.scale.setScalar(
-              carModel.scale.x + (targetScale - carModel.scale.x) * SCENE_CONFIG.zoomSpeed
-            );
+        // Animation particles
+        if (scene.userData.particles && scene.userData.particlePositions) {
+          const positions = scene.userData.particlePositions;
+          for (let i = 0; i < positions.length / 3; i++) {
+            const i3 = i * 3 + 1;
+            positions[i3] += Math.sin(elapsedTime + i) * 0.005;
+            
+            // Reset nếu ra ngoài
+            if (positions[i3] > 2 || positions[i3] < -4) {
+              positions[i3] = (Math.random() - 0.5) * 4;
+            }
           }
+          scene.userData.particles.geometry.attributes.position.needsUpdate = true;
         }
-
+        
+        // Animation photos
+        if (scene.userData.photos) {
+          scene.userData.photos.forEach((photo, i) => {
+            if (photo.material.opacity < 1) {
+              photo.material.opacity += 0.01;
+            }
+            
+            // Hiệu ứng float nhẹ
+            const floatOffset = Math.sin(elapsedTime * 0.5 + i) * 0.2;
+            photo.position.y = Math.sin((i / CONFIG.totalPhotos) * Math.PI * 2 + elapsedTime * 0.3) * 1.5 + floatOffset;
+            
+            // Quay về camera
+            photo.lookAt(camera.position);
+          });
+        }
+        
+        // Render
         renderer.render(scene, camera);
       }
 
-      function updateParticles(time) {
-        if (isFireworkMode) return;
+      function onWindowResize() {
+        if (!camera || !renderer) return;
         
-        Object.values(particleSystems).forEach((sys) => {
-          const cfg = sys.userData.config;
-          const positions = sys.geometry.attributes.position.array;
-          const velocities = sys.geometry.attributes.velocity.array;
+        const container = document.getElementById("canvas-container");
+        camera.aspect = container.clientWidth / container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+      }
+
+      // ========== TOUCH CONTROLS ĐƠN GIẢN ==========
+      function initTouchControls() {
+        const container = document.getElementById("canvas-container");
+        let isDragging = false;
+        let lastX = 0;
+        let lastY = 0;
+        
+        container.addEventListener('touchstart', (e) => {
+          if (e.touches.length === 1) {
+            isDragging = true;
+            isRotating = false;
+            lastX = e.touches[0].clientX;
+            lastY = e.touches[0].clientY;
+            e.preventDefault();
+          }
+        }, { passive: false });
+        
+        container.addEventListener('touchmove', (e) => {
+          if (!isDragging || e.touches.length !== 1) return;
           
-          for (let i = 0; i < positions.length / 3; i++) {
-            const iy = i * 3 + 1;
-            positions[iy] -= velocities[i] * cfg.speed * 8;
-            
-            if (positions[iy] < cfg.endY) {
-              positions[iy] = cfg.startY;
-              const r = cfg.radius * Math.sqrt(Math.random());
-              const theta = Math.random() * 2 * Math.PI;
-              positions[i * 3] = r * Math.cos(theta);
-              positions[i * 3 + 2] = r * Math.sin(theta);
+          const currentX = e.touches[0].clientX;
+          const currentY = e.touches[0].clientY;
+          
+          const deltaX = currentX - lastX;
+          const deltaY = currentY - lastY;
+          
+          if (jarModel) {
+            jarModel.rotation.y += deltaX * 0.01;
+            jarModel.rotation.x += deltaY * 0.005;
+          }
+          
+          lastX = currentX;
+          lastY = currentY;
+          e.preventDefault();
+        }, { passive: false });
+        
+        container.addEventListener('touchend', () => {
+          isDragging = false;
+          // Bật lại auto rotate sau 2 giây không touch
+          setTimeout(() => {
+            if (!isDragging) {
+              isRotating = true;
             }
-          }
+          }, 2000);
+        });
+        
+        // Double tap để toggle photos
+        let lastTap = 0;
+        container.addEventListener('touchend', (e) => {
+          const currentTime = Date.now();
+          const tapLength = currentTime - lastTap;
           
-          sys.geometry.attributes.position.needsUpdate = true;
-          
-          if (carModel && cfg.rotateWithJar && inspectedPhoto === null && !isTouching) {
-            sys.rotation.y = carModel.rotation.y;
-            sys.rotation.x = carModel.rotation.x;
+          if (tapLength < 300 && tapLength > 0) {
+            togglePhotos();
           }
+          lastTap = currentTime;
         });
       }
 
-      function updatePolaroids(time) {
-        if (isFireworkMode || !polaroidGroup) return;
+      function togglePhotos() {
+        if (!scene.userData.photoGroup) return;
         
-        polaroidGroup.children.forEach((p, i) => {
-          if (p === inspectedPhoto || p.material.opacity < 0.5) return;
-          if (isGalleryMode) {
-            const off = p.userData.floatOffset;
-            p.position.y = p.userData.targetPos.y + Math.sin(time * 0.6 + off) * 0.1;
-            p.rotation.z = p.userData.targetRot.z + Math.sin(time * 0.5 + off) * 0.05;
-          }
-        });
+        const photos = scene.userData.photos;
+        const isVisible = photos[0].material.opacity > 0.5;
         
-        if (isGalleryMode && inspectedPhoto === null && carModel) {
-          polaroidGroup.rotation.y = carModel.rotation.y * 0.5;
-          polaroidGroup.rotation.x = carModel.rotation.x * 0.5;
+        if (isVisible) {
+          // Ẩn photos
+          photos.forEach(photo => {
+            gsap.to(photo.material, {
+              opacity: 0,
+              duration: 0.5,
+              ease: "power2.in"
+            });
+          });
+        } else {
+          // Hiện photos
+          photos.forEach((photo, i) => {
+            gsap.to(photo.material, {
+              opacity: 1,
+              duration: 0.8,
+              delay: i * 0.05,
+              ease: "power2.out"
+            });
+          });
         }
       }
 
-      function updateBackgroundParticles(time, dt) {
-        if (!bgParticleGroup) return;
-        bgParticleGroup.rotation.z = Math.sin(time * 0.015) * 0.01;
-        bgParticleGroup.rotation.y = Math.sin(time * 0.02) * 0.02;
+      // ========== TẢI GSAP LAZY ==========
+      function loadGSAP() {
+        return new Promise((resolve) => {
+          if (window.gsap) {
+            resolve();
+            return;
+          }
+          
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js';
+          script.onload = resolve;
+          script.onerror = resolve; // Không block nếu không tải được
+          document.head.appendChild(script);
+        });
       }
 
-      function updateLyrics() {
-        const audio = document.getElementById("bg-music");
-        const lyricBox = document.getElementById("lyrics-text");
-        if (!audio || audio.paused) return;
+      // ========== KHỞI ĐỘNG ==========
+      window.addEventListener('DOMContentLoaded', async () => {
+        // Khởi động nhanh
+        initQuick();
         
-        const t = audio.currentTime;
-        for (let i = LYRICS_DATA.length - 1; i >= 0; i--) {
-          if (t >= LYRICS_DATA[i].time) {
-            if (lyricBox.innerText !== LYRICS_DATA[i].text) {
-              lyricBox.innerText = LYRICS_DATA[i].text;
+        // Tải GSAP sau (lazy load)
+        setTimeout(loadGSAP, 1000);
+        
+        // Khởi tạo touch controls
+        initTouchControls();
+      });
+
+      // ========== CLEANUP ==========
+      window.addEventListener('beforeunload', () => {
+        // Dọn dẹp memory
+        if (scene) {
+          scene.traverse((object) => {
+            if (object.geometry) object.geometry.dispose();
+            if (object.material) {
+              if (object.material.map) object.material.map.dispose();
+              object.material.dispose();
             }
-            break;
-          }
+          });
         }
-      }
-
-      // ========== HAND TRACKING TỐI ƯU ==========
-      function initHandTracking() {
-        const video = document.getElementById("input_video");
-        const canvas = document.getElementById("webcam-canvas");
-        const ctx = canvas.getContext("2d");
         
-        const hands = new Hands({
-          locateFile: (file) =>
-            `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`,
-        });
-
-        hands.setOptions({
-          maxNumHands: 1,
-          modelComplexity: 0,
-          minDetectionConfidence: 0.5,
-          minTrackingConfidence: 0.5,
-        });
-
-        hands.onResults((results) => {
-          if (!ctx) return;
-          
-          canvas.width = 160; // Giảm resolution
-          canvas.height = 120;
-          
-          ctx.clearRect(0, 0, canvas.width, canvas.height);
-          ctx.drawImage(results.image, 0, 0, canvas.width, canvas.height);
-          
-          STATE.hand.gesture = "NONE";
-          if (results.multiHandLandmarks.length > 0) {
-            STATE.hand.detected = true;
-            const lm = results.multiHandLandmarks[0];
-            STATE.hand.x = 1 - lm[0].x;
-            STATE.hand.y = lm[0].y;
-            
-            // Simple gesture detection
-            const tip8 = lm[8];
-            const tip12 = lm[12];
-            const tip16 = lm[16];
-            const tip20 = lm[20];
-            const wrist = lm[0];
-            
-            const dist8 = Math.hypot(tip8.x - wrist.x, tip8.y - wrist.y);
-            const dist12 = Math.hypot(tip12.x - wrist.x, tip12.y - wrist.y);
-            const dist16 = Math.hypot(tip16.x - wrist.x, tip16.y - wrist.y);
-            const dist20 = Math.hypot(tip20.x - wrist.x, tip20.y - wrist.y);
-            
-            const avgDist = (dist8 + dist12 + dist16 + dist20) / 4;
-            
-            if (avgDist < 0.2) {
-              STATE.hand.gesture = "FIST";
-            } else if (Math.hypot(lm[4].x - lm[8].x, lm[4].y - lm[8].y) < 0.05) {
-              STATE.hand.gesture = "PINCH";
-            } else if (dist8 > 0.3 && dist12 > 0.3 && dist16 < 0.2 && dist20 < 0.2) {
-              STATE.hand.gesture = "VICTORY";
-            } else {
-              STATE.hand.gesture = "OPEN";
-            }
-          } else {
-            STATE.hand.detected = false;
-          }
-        });
-
-        let frameCounter = 0;
-        const cameraUtils = new Camera(video, {
-          onFrame: async () => {
-            frameCounter++;
-            if (frameCounter % AI_SKIP_FRAMES === 0) {
-              try {
-                await hands.send({ image: video });
-              } catch (e) {
-                console.log("Hand tracking skipped frame");
-              }
-            }
-          },
-          width: 160,
-          height: 120,
-        });
-        cameraUtils.start();
-      }
-
-      // ========== KHỞI CHẠY ==========
-      window.addEventListener("load", init, { once: true });
+        if (renderer) {
+          renderer.dispose();
+          renderer.forceContextLoss();
+        }
+      });
     </script>
   </body>
 </html>
